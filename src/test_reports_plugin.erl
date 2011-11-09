@@ -33,4 +33,4 @@ preprocess(Config, File) ->
     {ok, []}.
 
 postprocess(_Config, _File) ->
-    ok.
+    {ok, []}.
