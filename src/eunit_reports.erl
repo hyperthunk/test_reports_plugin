@@ -33,8 +33,12 @@ before_test(Config, _File) ->
 sfprep(Opts) ->
     case lists:keyfind(dir, 1, Opts) of
         false ->
+            rebar_log:log(debug, "[~p] no surefire config to process!~n",
+                          [?MODULE]),
             ok;
         {dir, Dir} ->
             Path = filename:join([rebar_utils:get_cwd(), Dir, "foo.xml"]),
+            rebar_log:log(debug, "[~p] ensure path ~s exists!~n",
+                          [?MODULE, filename:dirname(Path)]),
             rebar_utils:ensure_dir(Path)
     end.
