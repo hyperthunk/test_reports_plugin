@@ -24,6 +24,9 @@
 
 before_test(Config, _File) ->
     EUnitOpts = rebar_config:get_local(Config, eunit_opts, []),
+    rebar_log:log(debug, "[~p] processing eunit config in ~s~n",
+                  [?MODULE, EUnitOpts, rebar_utils:get_cwd()]),
+    rebar_log:log(debug, "[~p] processing ~p~n", [?MODULE, EUnitOpts]),
     [ sfprep(Opts) || {report, {eunit_surefire, Opts}} <- EUnitOpts ],
     ok.
 

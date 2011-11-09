@@ -23,12 +23,21 @@
 -export([preprocess/2, postprocess/2]).
 
 preprocess(Config, File) ->
-    Command = rebar_utils:command_info(current),
-    case code:ensure_loaded(list_to_atom(atom_to_list(Command) ++ "_reports")) of
-        {module, Mod} ->
-            Mod:before_test(Config, File);
-        _ ->
-            ok
+    DepsDir = rebar_config:get_global(deps_dir, "deps"),
+    case lists:prefix(DepsDir, rebar_utils:get_cwd()) of
+        false ->
+            Command = rebar_utils:command_info(current),
+            Handler = list_to_atom(atom_to_list(Command) ++ "_reports"),
+            rebar_log:log(debug, "Checking for ~p handler...~n", [Command]),
+            case code:ensure_loaded(Handler) of
+                {module, Mod} ->
+                    rebar_log:log(debug, "found: ~p!~n", [Mod]),
+                    Mod:before_test(Config, File);
+                _ ->
+                    rebar_log:log(debug, "~p not found!~n", [Handler])
+            end;
+        true ->
+            rebar_log:log(debug, "Skipping ~p:preprocess/2 in deps", [?MODULE])
     end,
     {ok, []}.
 
