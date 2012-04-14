@@ -37,7 +37,8 @@ sfprep(Opts) ->
                           [?MODULE]),
             ok;
         {dir, Dir} ->
-            Path = filename:join([rebar_utils:get_cwd(), Dir, "foo.xml"]),
+            Path = filename:join([rebar_utils:get_cwd(), ".eunit", 
+                                    Dir, "foo.xml"]),
             rebar_log:log(debug, "[~p] ensure path ~s exists!~n",
                           [?MODULE, filename:dirname(Path)]),
             rebar_utils:ensure_dir(Path)

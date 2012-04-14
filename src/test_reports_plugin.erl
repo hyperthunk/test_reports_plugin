@@ -23,23 +23,35 @@
 -export([preprocess/2, postprocess/2]).
 
 preprocess(Config, File) ->
-    DepsDir = rebar_config:get_global(deps_dir, "deps"),
+    process(fun(Mod) -> Mod:before_test(Config, File) end).
+
+postprocess(Config, File) ->
+    process(fun(Mod) ->
+                case erlang:function_exported(Mod, after_test, 2) of
+                    true ->
+                        Mod:after_test(Config, File);
+                    false ->
+                        ok
+                end
+            end).
+
+process(Callback) ->
+    BaseDir = rebar_config:get_global(base_dir, []),
+    DepsDir = filename:join(BaseDir, rebar_config:get_global(deps_dir, "deps")),
+%    rebar_log:log(debug, "Checking if ~s is a subdir of ~s~n", 
+%                 [rebar_utils:get_cwd(), DepsDir]),
     case lists:prefix(DepsDir, rebar_utils:get_cwd()) of
         false ->
             Command = rebar_utils:command_info(current),
             Handler = list_to_atom(atom_to_list(Command) ++ "_reports"),
-            rebar_log:log(debug, "Checking for ~p handler...~n", [Command]),
             case code:ensure_loaded(Handler) of
                 {module, Mod} ->
-                    rebar_log:log(debug, "found: ~p!~n", [Mod]),
-                    Mod:before_test(Config, File);
-                _ ->
-                    rebar_log:log(debug, "~p not found!~n", [Handler])
+                    Callback(Mod);
+                Other ->
+                    rebar_log:log(debug, "WTF: ~p~n", [Other]),
+                    ok
             end;
         true ->
-            rebar_log:log(debug, "Skipping ~p:preprocess/2 in deps", [?MODULE])
+            ok
     end,
-    {ok, []}.
-
-postprocess(_Config, _File) ->
     {ok, []}.
